@@ -1,9 +1,15 @@
-#include <sycl/sycl.hpp>
+/**
+ * @file main.cpp
+ * @author Steven
+ * @brief A SYCL implementation of the Van Oorschot-Wiener (VOW) algorithm for finding partial collisions in the SHA-2 family of hash functions, utilizing GPU acceleration for the first stage of the algorithm. The program is structured into two main stages: Stage 1 performs a parallel search for distinguishable points (DPs) using SYCL, while Stage 2 performs a sequential search to find a partial collision from the DPs found in Stage 1. The code is designed to be flexible and can be easily adapted to different hash functions in the SHA-2 family by changing the hash type and related parameters.
+ * @version 0.1
+ * @date 2026-02-12
+ */
+
+ #include <sycl/sycl.hpp>
 #include <iostream>
 #include <array>
 #include "sha2.hpp"
-
-// icpx -fsycl -std=c++20 -O3 -o main.exe main.cpp
 
 enum class HASH_TYPE {
     SHA224, SHA256,
@@ -15,8 +21,6 @@ constexpr static auto N = 8;                              // Partial collision l
 constexpr static auto K = 2;                              // Distinguishable point condition length (K <= N)
 constexpr auto prefix = std::array<uint8_t, 4>{0x00, 0x11, 0x22, 0x33}; // Define a prefix for the input data
 constexpr auto suffix = std::array<uint8_t, 4>{0x33, 0x22, 0x11, 0x00}; // Define a suffix for the input data
-
-
 
 constexpr auto THREADS = 20'000;                   // Define the number of parallel threads to use
 constexpr auto BATCH_SIZE = 100'000;             // Define the number of hash computations each thread performs before synchronizing and checking for DP collisions (should be large enough to find DPs but not too large to cause long synchronization delays)  

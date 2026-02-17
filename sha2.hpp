@@ -5,7 +5,6 @@
  * @version 0.1
  * @date 2026-02-12
  * @see https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
- * 
  */
 
 #include <cstddef>
