@@ -1,5 +1,7 @@
 # Partial SHA-2 Collision with Prefix/Suffix (oneAPI SYCL)
 
+For explaintion on the algorithm (Van Oorschot–Wiener), SHA-2 (Merkle–Damgard Construction) or results, please visit [https://jianxun-p.github.io/sha2-collision-with-oneapi.html](https://jianxun-p.github.io/sha2-collision-with-oneapi.html).
+
 This project searches for a **partial collision** in SHA-2 outputs: two different inputs that share the same first `N` bytes of hash output.
 
 Inputs are constrained to this format:
