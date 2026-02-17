@@ -24,10 +24,10 @@ constexpr T rotate_right(T a, uint8_t n) noexcept {
 
 template<typename block_t, std::size_t BLOCK_LEN = 8>
 constexpr static std::array<block_t, BLOCK_LEN> message_to_blocks(const uint8_t *message) noexcept {
-    constexpr auto block_size = sizeof(block_t);
+    constexpr std::size_t block_size = sizeof(block_t);
     std::array<block_t, BLOCK_LEN> msg_block = {0};
-    for (auto i = 0; i < BLOCK_LEN; ++i) {
-        for (auto j = 0; j < block_size; ++j) {
+    for (std::size_t i = 0; i < BLOCK_LEN; ++i) {
+        for (std::size_t j = 0; j < block_size; ++j) {
             msg_block[i] <<= 8;
             msg_block[i] |= message[i * block_size + j];
         }
@@ -37,10 +37,9 @@ constexpr static std::array<block_t, BLOCK_LEN> message_to_blocks(const uint8_t 
 
 template<typename block_t, std::size_t BLOCK_LEN = 8>
 constexpr static auto blocks_to_bytes(void *out, const std::array<block_t, BLOCK_LEN> &blocks) noexcept {
-    
-    constexpr auto block_size = sizeof(block_t);
-    for (auto i = 0; i < BLOCK_LEN; ++i) {
-        for (auto j = 0; j < block_size; ++j) {
+    constexpr std::size_t block_size = sizeof(block_t);
+    for (std::size_t i = 0; i < BLOCK_LEN; ++i) {
+        for (std::size_t j = 0; j < block_size; ++j) {
             static_cast<uint8_t *>(out)[block_size * i + j] = (blocks[i] >> (8 * (block_size - j - 1))) & 0xFF;
         }
     }
@@ -170,7 +169,7 @@ private:
         std::copy(msg_block.cbegin(), msg_block.cend(), w.begin());
         word_t a = hash_val[0], b = hash_val[1], c = hash_val[2], d = hash_val[3],
             e = hash_val[4], f = hash_val[5], g = hash_val[6], h = hash_val[7];
-        for (auto i = 16; i < T; ++i) {
+        for (decltype(T) i = 16; i < T; ++i) {
             if constexpr (N == 32) {
                 w[i] = _sigma_1_256(w[i-2]) + w[i-7] + _sigma_0_256(w[i-15]) + w[i-16];
             } else if constexpr (N == 64) {
@@ -179,7 +178,7 @@ private:
                 static_assert(false, "BAD N");
             }
         }
-        for (auto i = 0; i < T; ++i) {
+        for (decltype(T) i = 0; i < T; ++i) {
             word_t t1 = 0, t2 = 0;
             if constexpr (N == 32) {
                 t1 = h + _big_sigma_1_256(e) + _SHA_CH(e, f, g) + _ROUND_CONSTANTS_256[i] + w[i];
@@ -229,7 +228,6 @@ public:
 
     void update(const void *message, const std::size_t length) noexcept {
         constexpr auto MESSAGE_BLOCK_SIZE = 2 * N;
-        const auto n = length / MESSAGE_BLOCK_SIZE;
         const auto msg = reinterpret_cast<const uint8_t *>(message);
         auto bytes_copied = std::min(length, MESSAGE_BLOCK_SIZE - consumed_len % MESSAGE_BLOCK_SIZE);
         std::copy(msg, msg + bytes_copied, tmp_message.data() + consumed_len % MESSAGE_BLOCK_SIZE);

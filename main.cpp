@@ -13,8 +13,8 @@ enum class HASH_TYPE {
 constexpr static auto hash_type = HASH_TYPE::SHA256;      // Set the hash type to use for the VOW algorithm (can be changed to any of the supported hash types)
 constexpr static auto N = 8;                              // Partial collision length
 constexpr static auto K = 2;                              // Distinguishable point condition length (K <= N)
-constexpr auto prefix = std::array<uint8_t, 0>{}; // Define a prefix for the input data
-constexpr auto suffix = std::array<uint8_t, 5>{0x73, 0x34, 0x70, 0x61, 0x6e}; // Define a suffix for the input data
+constexpr auto prefix = std::array<uint8_t, 4>{0x00, 0x11, 0x22, 0x33}; // Define a prefix for the input data
+constexpr auto suffix = std::array<uint8_t, 4>{0x33, 0x22, 0x11, 0x00}; // Define a suffix for the input data
 
 
 
@@ -212,7 +212,6 @@ StageOneResult<HASH> vow_stage_one(sycl::queue &q, std::ostream &os=std::cout) {
     q.wait();
     std::cout << "Done" << std::endl;
     
-    std::size_t total_hash_count;
     std::size_t batch_count = 1;
     while (!result.found) {
 
@@ -237,7 +236,7 @@ StageOneResult<HASH> vow_stage_one(sycl::queue &q, std::ostream &os=std::cout) {
         });
 
         // merge DP arrays and check for DP collision
-        auto max_dp_count = 0;
+        decltype(host_dp_arrays[0].dp_count) max_dp_count = 0;
         os << std::dec << "Batch: " << batch_count << ",\tTotal hash counts: " << result.total_hash_counts;
         for (std::size_t i = 0; i < THREADS; ++i) {
             max_dp_count = max_dp_count > host_dp_arrays[i].dp_count ? max_dp_count : host_dp_arrays[i].dp_count;
@@ -351,12 +350,6 @@ std::size_t print_collision(
         return n;
     } else {
         os << "no collision." << std::endl;
-        os << "Total hash counts: " << total_hash_counts;
-        os << "\nOutput 1: ";
-        print_arr(os, x_state.out);
-        os << "\nOutput 2: ";
-        print_arr(os, y_state.out);
-        os << std::endl;
         return n;
     }
 }
@@ -375,10 +368,20 @@ void divider(std::ostream &os=std::cout) {
 template<typename HASH>
 void vow_partial_collide() {
 
-    // sycl::queue q{sycl::default_selector_v};
-    sycl::queue q{sycl::gpu_selector_v};
+    sycl::queue q{sycl::default_selector_v};
+    // sycl::queue q{sycl::gpu_selector_v};
     // sycl::queue q{sycl::cpu_selector_v};
+
+
+    divider();
     print_device_info(q, std::cout);
+
+    std::cout << "Starting VOW partial collision attack on " << typeid(HASH).name() << " with N = " << N << " and K = " << K << std::endl;
+    std::cout << "Prefix: ";
+    print_arr(std::cout, prefix);
+    std::cout << "\nSuffix: ";
+    print_arr(std::cout, suffix);
+    std::cout << std::endl;
 
     divider();
     auto start1 = std::chrono::steady_clock::now();
@@ -402,7 +405,7 @@ void vow_partial_collide() {
     (void) print_collision<HASH>(x_state, y_state, total_hash_counts, seconds1 + seconds2);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     
     switch (hash_type) {
     case HASH_TYPE::SHA224:
